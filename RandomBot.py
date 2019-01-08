@@ -4,12 +4,30 @@ import time
 import random
 import datetime
 
+#Loading Product Clusters
+casualMan = [str(prod).strip() for prod in open("casualMen.txt",'r').read().splitlines()]
+sportyMan = [str(prod).strip() for prod in open("sportyMen.txt",'r').read().splitlines()]
+formalMan = [str(prod).strip() for prod in open("formalMen.txt",'r').read().splitlines()]
+
+casualWmn = [str(prod).strip() for prod in open("casualWmn.txt",'r').read().splitlines()]
+formalWmn = [str(prod).strip() for prod in open("formalWmn.txt",'r').read().splitlines()]
+sportyWmn = [str(prod).strip() for prod in open("sportyWmn.txt",'r').read().splitlines()]
+
 def addZero(x):
     x = str(x)
     if len(x) == 1:
         return "0" + x
     else:
         return x
+
+def crossSelect(x):
+    if x == 0:
+        y, z = 1, 2
+    elif x == 1:
+        y, z = 2, 0
+    else:
+        y, z = 0, 1
+    return random.choice([x] * 15 + [y] * 1 + [z] * 1)
 
 def genCart(prods, itemNoLst):
     cartline = ""
@@ -25,11 +43,9 @@ def generateCheckouts(initUser, noUsers, noCheckouts, prodLst, cartConfig):
         cart = ""
         logline = "page|checkout"
         randomIP = "{}.{}.{}.{}".format(random.randint(0,255),random.randint(0,255),random.randint(0,255),random.randint(0,255))
-        randomDT = "2018-{}-{} {}:{}:{}".format(addZero(random.randint(1,12)),
-                                                addZero(random.randint(0,29)),
-                                                addZero(random.randint(0,23)),
-                                                addZero(random.randint(0,60)),
-                                                addZero(random.randint(0,60)))
+        randomDT = "{}:{}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                                  addZero(random.randint(0,60)))
+
         if usr < (int((noUsers-initUser)*(1/3))+initUser):
             cart = genCart(random.sample(prodLst[0],random.choice(cartConfig[0])),cartConfig[1])
             logline = "{}|{}|{}|{}|{}".format(logline,randomIP,usr,randomDT,cart)
@@ -49,30 +65,21 @@ def generateVisits(initUser, noUsers, noVisits, prodLst):
         usr = random.choice(users)
         logline = "product"
         randomIP = "{}.{}.{}.{}".format(random.randint(0,255),random.randint(0,255),random.randint(0,255),random.randint(0,255))
-        randomDT = "2018-{}-{} {}:{}:{}".format(addZero(random.randint(1,12)),
-                                                addZero(random.randint(0,29)),
-                                                addZero(random.randint(0,23)),
-                                                addZero(random.randint(0,60)),
-                                                addZero(random.randint(0,60)))
+        randomDT = "{}:{}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                                  addZero(random.randint(0,60)))
+
         if usr < (int((noUsers-initUser)*(1/3))+initUser):
-            logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[0]),randomIP,usr,randomDT)
+            logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[crossSelect(0)]),randomIP,usr,randomDT)
         elif usr > (int((noUsers-initUser)*(2/3))+initUser):
-            logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[1]),randomIP,usr,randomDT)
+            logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[crossSelect(1)]),randomIP,usr,randomDT)
         else:
-            logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[2]),randomIP,usr,randomDT)
+            logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[crossSelect(2)]),randomIP,usr,randomDT)
         visitLst.append(logline)
     return visitLst
 
 if __name__ == '__main__':
 
-    #Loading Product Clusters
-    casualMan = ["SKU-" + str(prod).strip() for prod in open("casualMen.txt",'r').read().splitlines()]
-    sportyMan = ["SKU-" + str(prod).strip() for prod in open("sportyMen.txt",'r').read().splitlines()]
-    formalMan = ["SKU-" + str(prod).strip() for prod in open("formalMen.txt",'r').read().splitlines()]
-
-    casualWmn = ["SKU-" + str(prod).strip() for prod in open("casualWmn.txt",'r').read().splitlines()]
-    formalWmn = ["SKU-" + str(prod).strip() for prod in open("formalWmn.txt",'r').read().splitlines()]
-    sportyWmn = ["SKU-" + str(prod).strip() for prod in open("sportyWmn.txt",'r').read().splitlines()]
+   
 
     #Cart Configurations
     cartNoLst = [1] * 8 + [2] * 12 + [3] * 16 + [4] * 10 + [5] * 8 + [6] * 2
@@ -81,6 +88,7 @@ if __name__ == '__main__':
     noMan = int(input("No. of Male Customers: "))
     noWmn = int(input("No. of Female Customers: "))
 
+    #File generator
     if sys.argv[1] == 'rand':
         print("GEN Selected")
         
@@ -104,6 +112,8 @@ if __name__ == '__main__':
             logfile.write('\n'.join(str(line) for line in final))
         print("Logs generated successfully.")
     
+
+    #Log Bot
     elif sys.argv[1] == 'bot':
         print("BOT Selected")
         visitTraffic = int(input("Click Traffic Volume: "))
@@ -126,7 +136,8 @@ if __name__ == '__main__':
             #Wrap up
             final = menVisits + wmnVisits + menCheckouts + wmnCheckouts
             random.shuffle(final)
-            print(final)
+            for log in final:
+                print(log)
             time.sleep(delay) 
 
     else:
