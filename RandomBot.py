@@ -46,10 +46,10 @@ def generateCheckouts(initUser, noUsers, noCheckouts, prodLst, cartConfig):
         randomDT = "{}:{}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                                   addZero(random.randint(0,60)))
 
-        if usr < (int((noUsers-initUser)*(1/3))+initUser):
+        if usr < (int((noUsers)*(1/3))+initUser):
             cart = genCart(random.sample(prodLst[0],random.choice(cartConfig[0])),cartConfig[1])
             logline = "{}|{}|{}|{}|{}".format(logline,randomIP,usr,randomDT,cart)
-        elif usr > (int((noUsers-initUser)*(2/3))+initUser):
+        elif usr > (int((noUsers)*(2/3))+initUser-1):
             cart = genCart(random.sample(prodLst[1],random.choice(cartConfig[0])),cartConfig[1])
             logline = "{}|{}|{}|{}|{}".format(logline,randomIP,usr,randomDT,cart)
         else:
@@ -68,9 +68,9 @@ def generateVisits(initUser, noUsers, noVisits, prodLst):
         randomDT = "{}:{}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                                   addZero(random.randint(0,60)))
 
-        if usr < (int((noUsers-initUser)*(1/3))+initUser):
+        if usr < (int((noUsers)*(1/3))+initUser):
             logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[crossSelect(0)]),randomIP,usr,randomDT)
-        elif usr > (int((noUsers-initUser)*(2/3))+initUser):
+        elif usr > (int((noUsers)*(2/3))+initUser-1):
             logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[crossSelect(1)]),randomIP,usr,randomDT)
         else:
             logline = "{}|{}|{}|{}|{}".format(logline,random.choice(prodLst[crossSelect(2)]),randomIP,usr,randomDT)
@@ -79,8 +79,6 @@ def generateVisits(initUser, noUsers, noVisits, prodLst):
 
 if __name__ == '__main__':
 
-   
-
     #Cart Configurations
     cartNoLst = [1] * 8 + [2] * 12 + [3] * 16 + [4] * 10 + [5] * 8 + [6] * 2
     itemNoLst = [1] * 50 + [2] * 10 + [3] * 5 + [4] * 1
@@ -88,10 +86,20 @@ if __name__ == '__main__':
     noMan = int(input("No. of Male Customers: "))
     noWmn = int(input("No. of Female Customers: "))
 
+    mCasual = "{} - {}".format(0, int(noMan*1/3)-1)
+    mSporty = "{} - {}".format(int(noMan*1/3), int(noMan*2/3)-1)
+    mFormal = "{} - {}".format(int(noMan*2/3), noMan-1)
+    print("Man IDs: \nCasual: {}\nSporty: {}\nFormal: {}".format(mCasual, mSporty, mFormal))
+
+    wCasual = "{} - {}".format(noMan, int(noWmn*1/3)+noMan-1)
+    wSporty = "{} - {}".format(int(noWmn*1/3)+noMan, int(noWmn*2/3)+noMan-1)
+    wFormal = "{} - {}".format(int(noWmn*2/3)+noMan, noWmn+noMan-1)
+    print("Woman IDs: \nCasual: {}\nSporty: {}\nFormal: {}".format(wCasual, wSporty, wFormal))
+
     #File generator
     if sys.argv[1] == 'rand':
         print("GEN Selected")
-        
+
         noVisitM = int(input("No. of Clicks (Man): "))
         noVisitW = int(input("No. of Clicks (Women): "))
         noCheckoutM = int(input("No. of Checkouts (Man): "))
@@ -100,7 +108,7 @@ if __name__ == '__main__':
         #Generating Visits
         menVisits = generateVisits(0, noMan, noVisitM, [casualMan,sportyMan,formalMan])
         wmnVisits = generateVisits(noMan, noWmn, noVisitW, [casualWmn,sportyWmn,formalWmn])
-        
+
         #Generating Purchases
         menCheckouts = generateCheckouts(0, noMan, noCheckoutM, [casualMan,sportyMan,formalMan], [cartNoLst,itemNoLst])
         wmnCheckouts = generateCheckouts(noMan, noWmn, noCheckoutW, [casualWmn,sportyWmn,formalWmn], [cartNoLst,itemNoLst])
@@ -136,8 +144,12 @@ if __name__ == '__main__':
             #Wrap up
             final = menVisits + wmnVisits + menCheckouts + wmnCheckouts
             random.shuffle(final)
+            with open('/var/www/html/blog/wp-content/plugins/trackloger/logs/user_log.txt', mode='a') as logfile:
+                logfile.write('\n'.join(str(line) for line in final))
+                logfile.write('\n')
             for log in final:
                 print(log)
+            print(' ')
             time.sleep(delay) 
 
     else:
